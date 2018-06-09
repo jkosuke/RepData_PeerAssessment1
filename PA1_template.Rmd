@@ -28,6 +28,7 @@ g1 <- ggplot(sumByDay, aes(x = steps)) +
         labs(y = "number of days") +
         scale_y_continuous(breaks=seq(0,12,by=2))
 print(g1)
+dev.copy(png, "g1.png")
 ```
 
 2.Calculate the mean and median of the total number of steps taken per day
@@ -49,6 +50,7 @@ g2 <- ggplot(dailyPattern, aes(interval, steps)) +
         labs(x = "5-minute interval") +
         labs(y = "average number of steps")
 print(g2)
+dev.copy(png, "g2.png")
 ```
 
 2.Which 5-minute interval, on average across all the days in the dataset, contains the maximum number of steps?
@@ -94,6 +96,7 @@ g3 <- ggplot(newSumByDay, aes(x = steps)) +
         labs(y = "number of days") +
         scale_y_continuous(breaks=seq(0,20,by=2))
 print(g3)
+dev.copy(png, "g3.png")
 ```
 
 5.Calculate the mean and median total number of steps taken per day
@@ -128,5 +131,6 @@ g4 <- ggplot(WeekendPattern, aes(interval, steps)) +
         labs(y = "average number of steps") +
         theme(legend.position = 'none')
 print(g4)
+dev.copy(png, "g4.png")
 ```
 
