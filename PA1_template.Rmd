@@ -1,25 +1,132 @@
 ---
-title: "Reproducible Research: Peer Assessment 1"
-output: 
-  html_document:
-    keep_md: true
+title: "Reproducible Research Course Project 1"
+author: "jkosuke"
+date: "2018”N6ŒŽ9“ú"
+output: html_document
 ---
-
 
 ## Loading and preprocessing the data
 
+```{r}
+library(ggplot2)
+unzip("activity.zip")
+df <- read.csv("activity.csv")
+df$date <- as.Date(df$date)
+```
 
+## Mean total number of steps taken per day
 
-## What is mean total number of steps taken per day?
+1.Make a histogram of the total number of steps taken each day
 
+```{r plot1, fig.height=4}
+sumByDay <- aggregate(steps ~ date, df, FUN = sum)
+g1 <- ggplot(sumByDay, aes(x = steps)) +
+        geom_histogram(binwidth=1000, fill="#993435", colour = "black",
+                       boundary=0) +
+        labs(title = "Histogram of the total number of steps taken each day") +
+        labs(x = "total number of steps per day") +
+        labs(y = "number of days") +
+        scale_y_continuous(breaks=seq(0,12,by=2))
+print(g1)
+```
 
+2.Calculate the mean and median of the total number of steps taken per day
 
-## What is the average daily activity pattern?
+```{r mean}
+mean(sumByDay$steps, na.rm = TRUE)
+median(sumByDay$steps, na.rm = TRUE)
+```
 
+## The average daily activity pattern
 
+1.Make a time series plot of the 5-minute interval (x-axis) and the average number of steps taken, averaged across all days (y-axis)
+
+```{r plot2, fig.height=4}
+dailyPattern <- aggregate(steps ~ interval, df, FUN = mean)
+g2 <- ggplot(dailyPattern, aes(interval, steps)) +
+        geom_line() +
+        labs(title = "The average daily activity pattern") +
+        labs(x = "5-minute interval") +
+        labs(y = "average number of steps")
+print(g2)
+```
+
+2.Which 5-minute interval, on average across all the days in the dataset, contains the maximum number of steps?
+
+```{r maxsteps}
+dailyPattern[which.max(dailyPattern$steps), "interval"]
+```
 
 ## Imputing missing values
 
+1.Calculate the total number of missing values
 
+```{r maximum steps}
+sum(is.na(df$steps))
+```
+
+2.Fill in all of the missing values with the mean for that 5-minute interval.
+
+```{r fill NA}
+dfNA <- df[which(is.na(df$steps)), ]
+dfNA$steps <- replace(dfNA$steps, dfNA$interval %in%
+                      dailyPattern$interval, dailyPattern$steps)
+```
+
+3.Create a new dataset that is equal to the original dataset but with the missing data filled in.
+
+```{r new dataset}
+dfAvailable <- df[which(!is.na(df$steps)), ]
+newdf <- rbind(dfAvailable, dfNA)
+newdf <- newdf[order(newdf$date, newdf$interval), ]
+```
+
+4.Make a histogram of the total number of steps taken each day
+
+```{r plot3, fig.height=4}
+newSumByDay <- aggregate(steps ~ date, newdf, FUN = sum)
+g3 <- ggplot(newSumByDay, aes(x = steps)) +
+        geom_histogram(binwidth=1000, fill="#993435", colour = "black",
+                       boundary=0) +
+        labs(title = "Histogram of the total number of steps taken each day
+             after NA complement") +
+        labs(x = "total number of steps per day") +
+        labs(y = "number of days") +
+        scale_y_continuous(breaks=seq(0,20,by=2))
+print(g3)
+```
+
+5.Calculate the mean and median total number of steps taken per day
+
+```{r mean median}
+mean(newSumByDay$steps)
+median(newSumByDay$steps)
+```
 
 ## Are there differences in activity patterns between weekdays and weekends?
+
+1.Create a new factor variable in the dataset with two levels, gweekdayh and gweekendh.
+
+```{r weekday weekend}
+Sys.setlocale("LC_TIME","us")
+newdf$dayofWeek <- as.factor(weekdays(newdf$date))
+newdf$weekend <- as.factor(ifelse(newdf$dayofWeek=="Saturday" | 
+                        newdf$dayofWeek=="Sunday", "weekend", "weekday"))
+WeekendPattern <- aggregate(steps ~ interval + weekend, newdf, FUN = mean)
+```
+
+2.Make a panel plot containing a time series plot of the 5-minute interval (x-axis) and the average number of steps taken, averaged across all weekday days or weekend days (y-axis).
+
+```{r plot4, fig.height=6}
+g4 <- ggplot(WeekendPattern, aes(interval, steps)) +
+        geom_line(aes(colour = weekend)) +
+        labs(title = "The average daily activity pattern
+        weekday vs. weekend     ") +
+        theme(plot.title = element_text(hjust = 0.5)) +
+        facet_wrap(~ weekend, ncol = 1) +
+        labs(x = "5-minute interval") +
+        labs(y = "average number of steps") +
+        theme(legend.position = 'none')
+print(g4)
+```
+
